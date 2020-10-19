@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>POP RAX; POP RBX; RET</title>
+    <link>http://www.example.com/</link>
+    <description>Recent content on POP RAX; POP RBX; RET</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://www.example.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>A reaching definition engine for binary analysis built-in in angr.</title>
+      <link>http://www.example.com/posts/angr_rd/</link>
+      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.example.com/posts/angr_rd/</guid>
+      <description>Background Example Final Code  Background In this blog-post I would like to talk about some recent effort we have done to improve the Reaching Definition (RD) analysis inside angr, and how you can use it in your projects. Straight from compiler theory, a reaching definition analysis is (in very simple terms) a static program analysis technique that can help us answer which are the possible definitions for a specific variable at a particular line of code.</description>
+    </item>
+    
+    <item>
+      <title>About me</title>
+      <link>http://www.example.com/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.example.com/about/</guid>
+      <description>Oye! Chances are that if you ended up here you were wondering for some reasons &amp;ldquo;who the hell is this guy?&amp;rdquo;, or maybe, more likely, the internet rabbit hole simply led you to read the &amp;ldquo;About me&amp;rdquo; page of a random person (and maybe it&amp;rsquo;s also 2 am?). No worries, I know where you are coming from. I am a security researcher at UCSB Seclab, resident hacker@Shellphish, and developer/enthusiast of angr.</description>
+    </item>
+    
+    <item>
+      <title>First snippet</title>
+      <link>http://www.example.com/snippets/first/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.example.com/snippets/first/</guid>
+      <description>This content is in snippets/first/index.md
+pwd </description>
+    </item>
+    
+    <item>
+      <title>Publications</title>
+      <link>http://www.example.com/publications/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.example.com/publications/</guid>
+      <description>📄🎓 SYMBION: Interleaving Symbolic with Concrete Execution
+Fabio Gritti, Lorenzo Fontana, Eric Gustafson, Fabio Pagani, Andrea Continella, Christopher Kruegel, And Giovanni Vigna.
+Proceedings of the IEEE Conference on Communications and Network Security (CNS), Avignon, France, June 2020.
+  📄🎓 When Malware is Packin’ Heat; Limits of Machine Learning Classifiers Based on Static Analysis Features
+Hojjat Aghakhani, Fabio Gritti, Francesco Mecca, Martina Lindorfer, Stefano Ortolani, Davide Balzarotti, Giovanni Vigna And Christopher Kruegel.</description>
+    </item>
+    
+    <item>
+      <title>Second snippet</title>
+      <link>http://www.example.com/snippets/second/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.example.com/snippets/second/</guid>
+      <description>This content is in snippets/second/index.md
+ls -la </description>
+    </item>
+    
+  </channel>
+</rss>

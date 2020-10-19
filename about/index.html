@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+
+    <meta name="author" content="Fabio Gritti (degrigis)">
+    <meta name="description" content="Oye! Chances are that if you ended up here you were wondering for some reasons &ldquo;who the hell is this guy?&rdquo;, or maybe, more likely, the internet rabbit hole simply led you to read the &ldquo;About me&rdquo; page of a random person (and maybe it&rsquo;s also 2 am?). No worries, I know where you are coming from. I am a security researcher at UCSB Seclab, resident hacker@Shellphish, and developer/enthusiast of angr.">
+    <meta name="keywords" content="blog,hacker,infosec">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="About me"/>
+<meta name="twitter:description" content="Oye! Chances are that if you ended up here you were wondering for some reasons &ldquo;who the hell is this guy?&rdquo;, or maybe, more likely, the internet rabbit hole simply led you to read the &ldquo;About me&rdquo; page of a random person (and maybe it&rsquo;s also 2 am?). No worries, I know where you are coming from. I am a security researcher at UCSB Seclab, resident hacker@Shellphish, and developer/enthusiast of angr."/>
+
+    <meta property="og:title" content="About me" />
+<meta property="og:description" content="Oye! Chances are that if you ended up here you were wondering for some reasons &ldquo;who the hell is this guy?&rdquo;, or maybe, more likely, the internet rabbit hole simply led you to read the &ldquo;About me&rdquo; page of a random person (and maybe it&rsquo;s also 2 am?). No worries, I know where you are coming from. I am a security researcher at UCSB Seclab, resident hacker@Shellphish, and developer/enthusiast of angr." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.example.com/about/" />
+
+
+
+    <title>
+  About me · POP RAX; POP RBX; RET
+</title>
+
+    
+      <link rel="canonical" href="http://www.example.com/about/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.1.7/css/fork-awesome.min.css" integrity="sha256-gsmEoJAws/Kd3CjuOQzLie5Q3yshhvmo7YNtBG7aaEY=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="/css/coder.min.36f1118d4548731545ceb52c453b4b6ae8feb6fbd2008eb355940c7c146e03ec.css" integrity="sha256-NvERjUVIcxVFzrUsRTtLauj&#43;tvvSAI6zVZQMfBRuA&#43;w=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+      
+        
+        
+        <link rel="stylesheet" href="/css/coder-dark.min.717236c74e0a5208ef73964a9f44c6b443b689a95b270d8b2a40d0c012460dac.css" integrity="sha256-cXI2x04KUgjvc5ZKn0TGtEO2ialbJw2LKkDQwBJGDaw=" crossorigin="anonymous" media="screen" />
+      
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+
+    
+      <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+    
+
+    <meta name="generator" content="Hugo 0.76.4" />
+  </head>
+
+  
+  
+    
+  
+  <body class="colorscheme-auto"
+        onload=" twemoji.parse(document.body); "
+  >
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      POP RAX; POP RBX; RET
+    </a>
+    
+      
+        <span id="dark-mode-toggle" class="float-right">
+          <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+        </span>
+      
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">About</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/publications/">Publications</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">Blog</a>
+            </li>
+          
+        
+        
+        
+          <li class="navigation-item separator">
+            <span>|</span>
+          </li>
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container page">
+  <article>
+    <header>
+      <h1>About me</h1>
+    </header>
+
+    <p>Oye! Chances are that if you ended up here you were wondering for some reasons &ldquo;who the hell is this guy?&rdquo;, or maybe, more likely, the internet rabbit hole simply led you to read the &ldquo;About me&rdquo; page of a random person (and maybe it&rsquo;s also 2 am?). No worries, I know where you are coming from.
+<br>
+<br>
+I am a security researcher at <a href="https://seclab.cs.ucsb.edu">UCSB Seclab</a>, resident hacker@<a href="https://shellphish.net">Shellphish</a>, and developer/enthusiast of <a href="https://angr.io/">angr</a>.
+<br>
+<br>
+I&rsquo;m very passionate and curious about the future of computing and its current/future deep impact on our civilization. In particular, my mission is to make technology empowering human beings to its best, and I believe security is a fundamental piece of the puzzle to make this happen since <em>there is no progress where chaos reigns</em>.</p>
+<p>My research is particularly focused on <em>system security</em>, in a more l33t way defined also as the &ldquo;science of hacking&rdquo;. I&rsquo;ve been involved in different projects regarding malware analysis and program analysis applied to binaries for vulnerability discovery. This led me to explore all the many ways we can apply symbolic execution techniques to reason about real and practical problems of complex programs and software.
+<br>
+<br>
+I&rsquo;m a big fan of CTFs and I occasionally engage with <a href="https://shellphish.net">Shellphish</a>. I&rsquo;m also to blame (but don&rsquo;t, please) for <a href="https://ictf.cs.ucsb.edu/">iCTF</a> organization since 2019.
+<br>
+<br>
+As an 🇮🇹 soul currently living in the US I&rsquo;m also on a crusade against pineapple pizza and BBQ chicken pizza, but, I&rsquo;m not delusional, and I know there are some battles I can&rsquo;t win in this world. Therefore, I usually just sit aside, disappointed, and complaining as much as I can.</p>
+
+  </article>
+</section>
+
+  
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2020
+         Fabio Gritti (degrigis) 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+        
+      
+    </section>
+  </footer>
+
+    </main>
+
+    
+      
+      <script src="/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>

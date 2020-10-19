@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+
+    <meta name="author" content="Fabio Gritti (degrigis)">
+    <meta name="description" content="Background Example Final Code  Background In this blog-post I would like to talk about some recent effort we have done to improve the Reaching Definition (RD) analysis inside angr, and how you can use it in your projects. Straight from compiler theory, a reaching definition analysis is (in very simple terms) a static program analysis technique that can help us answer which are the possible definitions for a specific variable at a particular line of code.">
+    <meta name="keywords" content="blog,hacker,infosec">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="A reaching definition engine for binary analysis built-in in angr."/>
+<meta name="twitter:description" content="Background Example Final Code  Background In this blog-post I would like to talk about some recent effort we have done to improve the Reaching Definition (RD) analysis inside angr, and how you can use it in your projects. Straight from compiler theory, a reaching definition analysis is (in very simple terms) a static program analysis technique that can help us answer which are the possible definitions for a specific variable at a particular line of code."/>
+
+    <meta property="og:title" content="A reaching definition engine for binary analysis built-in in angr." />
+<meta property="og:description" content="Background Example Final Code  Background In this blog-post I would like to talk about some recent effort we have done to improve the Reaching Definition (RD) analysis inside angr, and how you can use it in your projects. Straight from compiler theory, a reaching definition analysis is (in very simple terms) a static program analysis technique that can help us answer which are the possible definitions for a specific variable at a particular line of code." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.example.com/posts/angr_rd/" />
+<meta property="article:published_time" content="2020-10-10T00:00:00+00:00" />
+<meta property="article:modified_time" content="2020-10-10T00:00:00+00:00" />
+
+
+    <title>
+  A reaching definition engine for binary analysis built-in in angr. · POP RAX; POP RBX; RET
+</title>
+
+    
+      <link rel="canonical" href="http://www.example.com/posts/angr_rd/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.1.7/css/fork-awesome.min.css" integrity="sha256-gsmEoJAws/Kd3CjuOQzLie5Q3yshhvmo7YNtBG7aaEY=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="/css/coder.min.36f1118d4548731545ceb52c453b4b6ae8feb6fbd2008eb355940c7c146e03ec.css" integrity="sha256-NvERjUVIcxVFzrUsRTtLauj&#43;tvvSAI6zVZQMfBRuA&#43;w=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+      
+        
+        
+        <link rel="stylesheet" href="/css/coder-dark.min.717236c74e0a5208ef73964a9f44c6b443b689a95b270d8b2a40d0c012460dac.css" integrity="sha256-cXI2x04KUgjvc5ZKn0TGtEO2ialbJw2LKkDQwBJGDaw=" crossorigin="anonymous" media="screen" />
+      
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+
+    
+      <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+    
+
+    <meta name="generator" content="Hugo 0.76.4" />
+  </head>
+
+  
+  
+    
+  
+  <body class="colorscheme-auto"
+        onload=" twemoji.parse(document.body); "
+  >
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      POP RAX; POP RBX; RET
+    </a>
+    
+      
+        <span id="dark-mode-toggle" class="float-right">
+          <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+        </span>
+      
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">About</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/publications/">Publications</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">Blog</a>
+            </li>
+          
+        
+        
+        
+          <li class="navigation-item separator">
+            <span>|</span>
+          </li>
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">A reaching definition engine for binary analysis built-in in angr.</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2020-10-10T00:00:00Z'>
+                October 10, 2020
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              13-minute read
+            </span>
+          </div>
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="/tags/angr/">angr</a>
+      <span class="separator">•</span>
+    <a href="/tags/binary-analysis/">binary analysis</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <ul>
+<li><a href="#background">Background</a></li>
+<li><a href="#example">Example</a></li>
+<li><a href="#final-code">Final Code</a></li>
+</ul>
+<h1 id="background">Background</h1>
+<p>In this blog-post I would like to talk about some recent effort we have done to improve the <strong>Reaching Definition</strong> (RD) analysis inside <a href="https://github.com/angr/angr">angr</a>, and how you can use it in your projects. Straight from compiler theory, a <em>reaching definition</em> analysis is (in very simple terms) a static program analysis technique that can help us answer which are the possible definitions for a specific variable at a particular line of code.</p>
+<p>Let&rsquo;s take, for instance, the following snippet:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C">[<span style="color:#ff0;font-weight:bold">0</span>] c = input()
+[<span style="color:#ff0;font-weight:bold">1</span>] var a = <span style="color:#ff0;font-weight:bold">6</span>  
+[<span style="color:#ff0;font-weight:bold">2</span>] var b = a + <span style="color:#ff0;font-weight:bold">6</span>  
+[<span style="color:#ff0;font-weight:bold">3</span>] <span style="color:#fff;font-weight:bold">if</span> c == <span style="color:#ff0;font-weight:bold">3</span>:  
+[<span style="color:#ff0;font-weight:bold">4</span>]   a = <span style="color:#ff0;font-weight:bold">4</span>  
+[<span style="color:#ff0;font-weight:bold">5</span>]   c = a + <span style="color:#ff0;font-weight:bold">1</span> 
+[<span style="color:#ff0;font-weight:bold">6</span>] <span style="color:#fff;font-weight:bold">else</span>  
+[<span style="color:#ff0;font-weight:bold">7</span>]   a = <span style="color:#ff0;font-weight:bold">2</span>  
+[<span style="color:#ff0;font-weight:bold">8</span>]   c = a + <span style="color:#ff0;font-weight:bold">2</span> 
+[<span style="color:#ff0;font-weight:bold">9</span>] b = a + <span style="color:#ff0;font-weight:bold">2</span>
+</code></pre></div><p>Here we can use RD by placing a -so called- <em>observation point</em> at [5] and ask &ldquo;which are the values we can observe at [5] for variable &lsquo;a&rsquo;?&rdquo;. The answer in this case will be 4. If we would have asked the same question at [8] the answer would have been 2 and, eventually, asking this question at observation point [9] would have given us both 4 and 2 as an answer. If you are confused regarding the latest answer, keep in mind that this technique is purely static: the analysis simply observes that since the var &lsquo;c&rsquo; has no specific value we can take both the branches of the &lsquo;if&rsquo;, therefore, &lsquo;a&rsquo; can be re-defined with 4 or 2.</p>
+<p>Now, let&rsquo;s spice this up a little bit. 🌶️</p>
+<p>When doing binary analysis we don&rsquo;t have the luxury of having the source code of the application we are analyzing, and chances are that, if you are using angr, you are exactly in this situation. However, variables are just fancy programming language abstractions and under the hood they are stored in memory and registers. Therefore, we can use the RD analysis to reason about those entities and getting nearly equivalent results.</p>
+<p>If we think about the previous program in (totally unoptimized) assembly:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">[0]  mov rcx, [rsp+0x8]   ; moving variable &#39;c&#39; in rcx
+[1]  mov rax, 6         
+[2]  mov [rsp+0x10], rax  ; setting var &#39;a&#39;   
+[3]  add rbx, rax, 6      ; defining variable &#39;b&#39;
+[4]  mov [rsp+0x1C], rbx  
+[5]  cmp rcx, 0x3         ; checking if var &#39;c&#39; is 3 or not
+[6]  jne label2           ; if not, go to label2
+[7]  mov [rsp+0x10], 0x4
+[8]  mov rax, [rsp+0x10]
+[9]  add rcx, rax, 0x1
+[10] mov [rsp+0x8], rcx
+[11] jmp end 
+[12] label2:
+[13]  mov [rsp+0x10], 0x2
+[14]  mov rax, [rsp+0x10]
+[15]  add rcx, rax, 0x1
+[16]  mov [rsp+0x8], rcx
+[17] end:
+[18]  mov rax, [rsp+0x10]
+[19]  add rbx, rax, 0x2
+[20]  mov [rsp+0x1C], rbx
+</code></pre></div><p>Now, we need to define an observation point and understand the question we want to ask to get the result we want. For instance, if we want to ask, like before, which are the possible values of the var &lsquo;a&rsquo; in the branch where &lsquo;c&rsquo; is equal to 3 we would need to ask &ldquo;which are the values we can observe at [9] for register rax?&rdquo;.</p>
+<p>This technique is the foundation for different analyses at the base of vulnerability hunting tools, static taint engine systems, function prototypes recovery routines, constant propagators, and so on. We extensively use this in <em>angr</em> to accomplish a different kind of tasks because its speed, compared with analyses based on Dynamic Symbolic Execution (DSE), it&rsquo;s <em>amazing</em>. Personally, I&rsquo;ve been able to speed up things from taking an hour (using DSE) to minutes by simply re-thinking them using this approach!</p>
+<h1 id="example">Example</h1>
+<p>Let&rsquo;s go through some real code that will, hopefully, clarify how to leverage this feature and how to eventually hack into it (recently there have been many questions on our <a href="https://angr.io/invite/">slack</a> and I thought this blog-post might have been useful for some researchers).</p>
+<p>For the purpose of this example, I&rsquo;ll go through a real problem I had to solve for my current project. In particular, I wanted to collect all the locations in a given binary where the return value of a function was consumed as an argument for a <code>memcpy</code>. For instance:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C">[<span style="color:#ff0;font-weight:bold">0</span>] c = foo()
+[<span style="color:#ff0;font-weight:bold">1</span>] ...
+[<span style="color:#ff0;font-weight:bold">2</span>] { ... more code here ... }
+[<span style="color:#ff0;font-weight:bold">3</span>] ...
+[<span style="color:#ff0;font-weight:bold">4</span>] memcpy(c, a, <span style="color:#ff0;font-weight:bold">0x10</span>)
+</code></pre></div><p>For most of you this problem probably already triggered the word &ldquo;taint engine&rdquo; in your minds, but, how can we practically implement this in angr?
+A friend and colleague of mine (<a href="https://twitter.com/badnack?lang=en">@badnack</a>) already proposed a solution <a href="https://github.com/badnack/angr_taint_engine">here</a>. However, while this approach can be useful in some situations, it doesn&rsquo;t really fit my case mainly for 3 reasons:</p>
+<ol>
+<li>It is fully based on DSE. Therefore, while executing code we are creating SimState(s), collecting and solving constraints, and in general, hacking the symbolic exploration (and abusing its features) to force <em>angr</em> to behave like a taint engine.</li>
+<li>This is a direct consequence of the previous point, but deserves a separate discussion. If we want to design an analysis not affected by false negatives (i.e., we want to spot <strong>all the locations</strong> where <code>memcpy</code> is consuming a value returned by a function) we need to reason about EVERY possible path that we can observe over the Control Flow Graph (CFG). This means that we would have to exhaust the symbolic exploration to be sure we checked all of them. Unfortunately, this can either lead to state explosions/path explosions or simply take an unacceptable amount of time.<br>
+Moreover, we would like to start from the sinks (the calls to memcpy) and reverse-search to the sources (the functions' return values), but <em>backward symbolic execution</em> is not quite possible in angr (and honestly I&rsquo;m also not aware of any tools that implement this).</li>
+<li>It doesn&rsquo;t really scale if we want to make this analysis inter-functional. The first implementation of this spent more than an hour(!) to find all the locations in the code, moreover, the results were partial and some paths were not considered.</li>
+</ol>
+<p>The intuition here is to try to implement the same technique we would manually use to spot these dependencies: look at the code and simply look at how variables are defined and use in the function. In the following screenshot, you can see how the variable <code>v25</code> is defined by the <code>memb_alloc</code> and consumed by <code>memcpy</code>.</p>
+<p><img src="/images/malloc_memcpy_dep_1.png#center" alt="function_correlation"></p>
+<p>The idea here is pretty simple: we want to set an observation point at the memcpy call (address <code>0x37CA</code>) and then ask for seeable definitions for the register <code>r0</code> (the one that is holding the <code>v25</code>).</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">.text:000037BA STRB    R5, [R0,#0x1C]
+.text:000037BC MOVS    R3, #1
+.text:000037BE STRB    R3, [R0,#0x1D]
+.text:000037C0 ADDS    R0, #0xC
+.text:000037C2 MOV     R3, R9
+.text:000037C4 ADDS    R1, R3, #2
+.text:000037C6 MOVS    R2, #0x10
+.text:000037C8 LDR     R3, =(memcpy+1)
+.text:000037CA BLX     R3  ;memcpy     &lt;== OBSERVATION POINT 
+.text:000037CC ADDS    R0, R4, #4      ; t
+.text:000037CE MOVS    R1, #0x12C00    ; interval
+.text:000037D2 LDR     R3, =(timer_set+1)
+.text:000037D4 BLX     R3              ; timer_set
+.text:000037D6 MOVS    R1, R4          ; item
+.text:000037D8 LDR     R0, =others_services_list ; list
+.text:000037DA LDR     R3, =(list_add+1)
+.text:000037DC BLX     R3              ; list_add
+</code></pre></div><p>Zooming out this basic block it&rsquo;s interesting to see where it is placed inside the CFG of the function under analysis (in green).</p>
+<p><img src="/images/angr_rd_cfg.png#center" alt="memcpy_cfg"></p>
+<p>Basically, by asking the question &ldquo;which definitions for <code>r0</code> can we observe at address <code>0x37CA</code>?&rdquo; we will collect all the possible definitions for <code>r0</code> that are observable when the execution flow reaches the address <code>0x37CA</code> inside the green basic block.</p>
+<p>Let&rsquo;s start to write some code:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#fff;font-weight:bold">import</span> angr 
+<span style="color:#fff;font-weight:bold">import</span> autoblob <span style="color:#007f7f"># just to load the blob, more at https://github.com/subwire/autoblob</span>
+<span style="color:#fff;font-weight:bold">import</span> angr.analyses.reaching_definitions.dep_graph <span style="color:#fff;font-weight:bold">as</span> dep_graph
+
+blob_path = <span style="color:#0ff;font-weight:bold">&#34;./blob.bin&#34;</span>
+target_func_addr = <span style="color:#ff0;font-weight:bold">0x3609</span> <span style="color:#007f7f"># Odd addresses because ARM Thumb mode </span>
+call_to_memcpy = <span style="color:#ff0;font-weight:bold">0x37CB</span> <span style="color:#007f7f"># Odd addresses because ARM Thumb mode</span>
+
+<span style="color:#fff;font-weight:bold">print</span>(<span style="color:#0ff;font-weight:bold">&#34;Creating angr Project&#34;</span>)
+project = angr.Project(blob_path)
+
+<span style="color:#007f7f"># Some standard options for the CFG</span>
+<span style="color:#fff;font-weight:bold">print</span>(<span style="color:#0ff;font-weight:bold">&#34;Creating binary CFG&#34;</span>)
+bin_cfg = project.analyses.CFG(resolve_indirect_jumps=True, 
+                               cross_references=True, 
+                               force_complete_scan=False, 
+                               normalize=True, 
+                               symbols=True)
+
+<span style="color:#007f7f"># Getting the func object from the addres</span>
+target_func = bin_cfg.functions.get_by_addr(target_func_addr)
+<span style="color:#007f7f"># Starting the ReachingDefinition analysis</span>
+rd = project.analyses.ReachingDefinitions(subject=target_func, 
+                                          func_graph=target_func.graph,
+                                          cc = target_func.calling_convention,
+                                          observation_points= [(<span style="color:#0ff;font-weight:bold">&#34;insn&#34;</span>, 
+                                                                call_to_memcpy,
+                                                                <span style="color:#ff0;font-weight:bold">0</span>)],
+                                          dep_graph = dep_graph.DepGraph()
+                                          )
+</code></pre></div><p>This will specifically run the reaching definition analysis over the target function <code>0x3609</code> by using as an observation point the call to the memcpy at <code>0x37CB</code> (note that you can set multiple observation points if you wish).</p>
+<p>By investigating the results object we can get the information regarding the register <code>r0</code>:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#007f7f"># VEX offset is just how the VEX IR refers to registers</span>
+reg_vex_offset = project.arch.registers.get(<span style="color:#0ff;font-weight:bold">&#34;r0&#34;</span>, None)[<span style="color:#ff0;font-weight:bold">0</span>]
+reg_defs = rd.one_result.register_definitions.get_objects_by_offset(reg_vex_offset)
+<span style="color:#fff;font-weight:bold">print</span>(reg_defs)
+<span style="color:#007f7f"># RESULT:</span>
+<span style="color:#007f7f"># {&lt;Definition {Atom:&lt;Reg 8&lt;4&gt;&gt;, Codeloc:&lt;0x37c1 id=0x37bb[36]&gt;, </span>
+<span style="color:#007f7f">#              Data:DataSet&lt;32&gt;: {&lt;Undefined&gt;}}&gt;}</span>
+</code></pre></div><p>The result is telling us that the latest instruction that defines the register <code>r0</code> -before calling
+the <code>memcpy</code>- is at code location <code>0x37c1</code> (for those curious: <code>id</code> is the basic block address and <code>36</code> is the VEX statement), but its
+value (in the DataSet) is <code>Undefined</code>. Why is that? To understand let&rsquo;s take a look at the instruction at <code>0x37c1</code>:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">.text:000037C0 ADDS    R0, #0xC
+</code></pre></div><p>The definition of <code>r0</code> is coming from whatever value <code>r0</code> was holding added to <code>0xc</code>. But what was the value of <code>r0</code> at this point? Well, that&rsquo;s again a question for RD:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">rd2 = project.analyses.ReachingDefinitions(subject=target_func, 
+                                          func_graph=target_func.graph,
+                                          cc = target_func.calling_convention,
+                                          observation_points= [(<span style="color:#0ff;font-weight:bold">&#34;insn&#34;</span>, <span style="color:#ff0;font-weight:bold">0x37c1</span> , <span style="color:#ff0;font-weight:bold">0</span>)],
+                                          dep_graph = dep_graph.DepGraph()
+                                          )
+reg_defs2 = rd2.one_result.register_definitions.get_objects_by_offset(reg_vex_offset)
+<span style="color:#fff;font-weight:bold">print</span>(reg_defs2)
+<span style="color:#007f7f"># RESULT:</span>
+<span style="color:#007f7f"># {&lt;Definition {Tags:{</span>
+<span style="color:#007f7f">#                    &lt;ReturnValueTag {Function: 0x3a3d, </span>
+<span style="color:#007f7f">#                                     Metadata:{&#39;tagged_by&#39;: &#39;SimEngineRDVEX._handle_function_cc&#39;}}&gt;</span>
+<span style="color:#007f7f">#                   }, </span>
+<span style="color:#007f7f">#              Atom:&lt;Reg 8&lt;4&gt;&gt;, </span>
+<span style="color:#007f7f">#              Codeloc:&lt;0x37b5 id=0x37b1[-2]&gt;,</span>
+<span style="color:#007f7f">#              Data:DataSet&lt;32&gt;: {&lt;Undefined&gt;}}&gt;}</span>
+</code></pre></div><p>The previous definition for <code>r0</code> has been recorded at the address <code>0x37b5</code>, but by looking at that address we can&rsquo;t see any definition for <code>r0</code>, right?</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">.text:000037B0
+.text:000037B0 loc_37B0                ; m
+.text:000037B0 process_pt = R8         ; pt *
+.text:000037B0 LDR     R0, =registrations
+.text:000037B2 LDR     R3, =(memb_alloc+1)
+.text:000037B4 BLX     R3     ; memb_alloc  &lt;==
+</code></pre></div><p>Well, the RD analysis is smart enough that, by making use of the function&rsquo;s calling convention (CC), knows that this function is going to return stuff, and under the current CC this &ldquo;stuff&rdquo; is returned inside <code>r0</code>, therefore, <code>r0</code> is actually redefined here.
+This information is integrated inside the <code>Definition</code> object we got as a result. We can see that, indeed, the <code>Definition</code> has been tagged with a <code>ReturnValueTag</code>, pointing out that not only the content of <code>r0</code> is the result of a function call, but also that the function that has been called is <code>0x3a3d</code>. 🏷️</p>
+<p>Now we can easily understand why the value observed at the call to memcpy was <code>Undefined</code>: RD didn&rsquo;t know the value returned by the function <code>0x3a3d</code>, but simply that <code>r0</code> it&rsquo;s going to be redefined. Given that, it assigns an <code>Undefined</code> value and when later the RD engine has to sum up <code>Undefined</code> + <code>0xC</code> everything is merged into <code>Undefined</code> (for people familiar with data-flow analysis this is basically merging to Top).</p>
+<p>The tagging mechanism for these definitions has been recently introduced and I really believe empowers a lot of smart reasoning about these chains of definitions of registers. In particular, I&rsquo;m gonna leverage this exact mechanism to solve the problem we were discussing at the beginning.</p>
+<p>Recalling the problem: we are trying to spot situations where the first argument of <code>memcpy</code> (held by register <code>r0</code> in this architecture) is the return value of another function. The idea is pretty simple: automatically walk back the definitions chain for the registers we need (by using the <code>dep_graph</code>) until the definition is not <code>Undefined</code> anymore (in that case it would mean that the argument is a constant) OR until we hit a <code>Definition</code> node tagged with a <code>ReturnValueTag</code>.</p>
+<p>We can picture this in the following way:</p>
+<p><img src="/images/angr_rd_graph_simply.png#center" alt="rd_grap_simple"></p>
+<p>The <code>r0</code>&rsquo;s definition flowing inside <code>memcpy</code> is the one at <em>D3</em>, since this has the <code>Undefined</code> value we will walk back the <code>dep_graph</code> and eventually find <em>D1</em> and <em>D2</em> (in this case 2 different paths can bring us to <em>ins3</em>). <em>D1</em> has no interesting value for our purpose since it is a constant, but <em>D2</em> instead will be tagged as coming from <code>function_abc</code>. (quick note: the graph presented above is actually a simplification of what we can actually see if we would have dumped the <code>dep_graph</code> object with networkx).</p>
+<p>Now that the approach is clear, it&rsquo;s time to write the code to implement this analysis.</p>
+<h1 id="final-code">Final Code</h1>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#fff;font-weight:bold">import</span> angr 
+<span style="color:#fff;font-weight:bold">import</span> autoblob
+<span style="color:#fff;font-weight:bold">import</span> os
+<span style="color:#fff;font-weight:bold">import</span> angr.analyses.reaching_definitions.dep_graph <span style="color:#fff;font-weight:bold">as</span> dep_graph
+
+<span style="color:#fff;font-weight:bold">from</span> angr.engines.light <span style="color:#fff;font-weight:bold">import</span> SpOffset, RegisterOffset
+<span style="color:#fff;font-weight:bold">from</span> angr.knowledge_plugins.key_definitions.atoms <span style="color:#fff;font-weight:bold">import</span> Register, SpOffset, MemoryLocation
+<span style="color:#fff;font-weight:bold">from</span> angr.knowledge_plugins.key_definitions.undefined <span style="color:#fff;font-weight:bold">import</span> Undefined
+<span style="color:#fff;font-weight:bold">from</span> angr.knowledge_plugins.key_definitions.definition <span style="color:#fff;font-weight:bold">import</span> Tag
+<span style="color:#fff;font-weight:bold">from</span> angr.knowledge_plugins.key_definitions.tag <span style="color:#fff;font-weight:bold">import</span> ReturnValueTag
+<span style="color:#fff;font-weight:bold">from</span> angr.knowledge_plugins.key_definitions.tag <span style="color:#fff;font-weight:bold">import</span> ParameterTag
+
+<span style="color:#fff;font-weight:bold">from</span> networkx.drawing.nx_agraph <span style="color:#fff;font-weight:bold">import</span> write_dot
+
+<span style="color:#007f7f"># Utility class to walk back the definitions graph.</span>
+<span style="color:#fff;font-weight:bold">class</span> DefinitionExplorer():
+    <span style="color:#fff;font-weight:bold">def</span> __init__(self, project, rd_ddg_graph):
+        self.project = project
+        self.rd_ddg_graph = rd_ddg_graph
+
+    <span style="color:#fff;font-weight:bold">def</span> resolve_use_def(self, reg_def):
+        <span style="color:#007f7f"># Now we need to analyze the definition for this atom</span>
+        reg_seen_defs = <span style="color:#fff;font-weight:bold">set</span>()
+        defs_to_check = <span style="color:#fff;font-weight:bold">set</span>()
+        defs_to_check.add(reg_def)
+    
+        <span style="color:#007f7f"># Cache of all seen nodes (Tie the knot)</span>
+        seen_defs = <span style="color:#fff;font-weight:bold">set</span>()
+
+        <span style="color:#fff;font-weight:bold">while</span> <span style="color:#fff;font-weight:bold">len</span>(defs_to_check) != <span style="color:#ff0;font-weight:bold">0</span>:
+            current_def = defs_to_check.pop()
+            seen_defs.add(current_def) 
+            <span style="color:#007f7f"># Check if the current Definition has a tag </span>
+            def_value = self.check_definition_tag(current_def)
+            
+            <span style="color:#007f7f"># If def_value is not None we hit a &#34;retval&#34; and we collect it,</span>
+            <span style="color:#007f7f"># in the other case we need to check if it is Undefined, if yes gotta walk back. </span>
+            <span style="color:#fff;font-weight:bold">if</span> def_value:
+                reg_seen_defs.add(def_value)
+            <span style="color:#fff;font-weight:bold">else</span>:
+                dataset = current_def.data 
+                <span style="color:#007f7f"># Boolean guard: do we have any undefined pointers? </span>
+                undefined_pointers = False 
+                
+                <span style="color:#007f7f"># A value in DataSet can be &#34;Int&#34; or &#34;Undefined&#34;</span>
+                <span style="color:#fff;font-weight:bold">for</span> data in dataset:
+                    <span style="color:#fff;font-weight:bold">if</span> <span style="color:#fff;font-weight:bold">type</span>(data) == Undefined: undefined_pointers = True  
+
+                <span style="color:#007f7f"># If we have undefined pointers (a.k.a. Top value) we need to process the predecessors.</span>
+                <span style="color:#fff;font-weight:bold">if</span> undefined_pointers:
+                    <span style="color:#fff;font-weight:bold">for</span> pred in self.rd_ddg_graph.graph.predecessors(current_def):
+                        <span style="color:#fff;font-weight:bold">if</span> pred not in seen_defs:
+                            defs_to_check.add(pred)
+                <span style="color:#fff;font-weight:bold">else</span>:
+                     <span style="color:#007f7f"># This is a constant.</span>
+                    def_value = (<span style="color:#0ff;font-weight:bold">&#34;int&#34;</span>, None)
+                    reg_seen_defs.add(def_value)
+
+        <span style="color:#fff;font-weight:bold">return</span> reg_seen_defs
+
+    <span style="color:#007f7f"># Checking the tag over a definition.</span>
+    <span style="color:#fff;font-weight:bold">def</span> check_definition_tag(self, definition):
+        <span style="color:#fff;font-weight:bold">if</span> <span style="color:#fff;font-weight:bold">len</span>(definition.tags) &gt; <span style="color:#ff0;font-weight:bold">0</span>:
+            curr_tag = definition.tags.pop() <span style="color:#007f7f"># Ok just take the first one as for now.</span>
+            <span style="color:#fff;font-weight:bold">if</span> <span style="color:#fff;font-weight:bold">type</span>(curr_tag) == ReturnValueTag:
+                <span style="color:#fff;font-weight:bold">return</span> (<span style="color:#0ff;font-weight:bold">&#34;retval&#34;</span>,curr_tag.function) 
+            <span style="color:#fff;font-weight:bold">else</span>:
+                <span style="color:#fff;font-weight:bold">print</span>(<span style="color:#fff;font-weight:bold">type</span>(curr_tag))
+                <span style="color:#fff;font-weight:bold">return</span> None
+
+<span style="color:#007f7f"># Path of the blob.</span>
+blob_path = <span style="color:#0ff;font-weight:bold">&#34;./atmel_6lowpan_udp_rx.bin&#34;</span>
+
+<span style="color:#007f7f"># Address of memcpy function.</span>
+memcpy_addr = <span style="color:#ff0;font-weight:bold">0xf647</span>
+
+<span style="color:#fff;font-weight:bold">print</span>(<span style="color:#0ff;font-weight:bold">&#34;Creating angr Project&#34;</span>)
+project = angr.Project(blob_path)
+
+<span style="color:#fff;font-weight:bold">print</span>(<span style="color:#0ff;font-weight:bold">&#34;Creating binary CFG&#34;</span>)
+bin_cfg = project.analyses.CFG(resolve_indirect_jumps=True, cross_references=True, 
+                                force_complete_scan=False, normalize=True, symbols=True)
+
+<span style="color:#007f7f"># Get CFG node for memcpy</span>
+memcpy_node = bin_cfg.model.get_any_node(memcpy_addr)
+<span style="color:#007f7f"># Get all the XRefs (predecessor of the memcpy nodes)</span>
+memcpy_node_preds = memcpy_node.predecessors
+<span style="color:#007f7f"># Get the CC of memcpy</span>
+memcpy_cc =  project.kb.functions[memcpy_addr].calling_convention
+
+<span style="color:#007f7f"># Grab all functions that have an xrefs to the basic function</span>
+memcpy_funcs_preds = <span style="color:#fff;font-weight:bold">list</span>(<span style="color:#fff;font-weight:bold">set</span>([x.function_address <span style="color:#fff;font-weight:bold">for</span> x in memcpy_node_preds]))
+
+<span style="color:#007f7f"># Creating a dictionary of predecessors functions and the address </span>
+<span style="color:#007f7f"># of the xrefs to the memcpy </span>
+FUNC_PREDECESSORS = {}
+<span style="color:#fff;font-weight:bold">for</span> memcpy_func_pred_addr in memcpy_funcs_preds:
+    FUNC_PREDECESSORS[<span style="color:#fff;font-weight:bold">str</span>(memcpy_func_pred_addr)] = []
+<span style="color:#fff;font-weight:bold">for</span> x in memcpy_node_preds:
+    FUNC_PREDECESSORS[<span style="color:#fff;font-weight:bold">str</span>(x.function_address)].append(x)
+
+OVERALL_DEFS = <span style="color:#fff;font-weight:bold">set</span>()
+FUNCS = <span style="color:#fff;font-weight:bold">set</span>()
+
+<span style="color:#fff;font-weight:bold">for</span> memcpy_func_pred_addr, xrefs in FUNC_PREDECESSORS.items():
+    memcpy_func_pred_addr = <span style="color:#fff;font-weight:bold">int</span>(memcpy_func_pred_addr)
+    <span style="color:#fff;font-weight:bold">print</span>(<span style="color:#0ff;font-weight:bold">&#34;Now analyzing predecessor func at {}&#34;</span>.format(<span style="color:#fff;font-weight:bold">hex</span>(memcpy_func_pred_addr)))
+    <span style="color:#fff;font-weight:bold">print</span>(<span style="color:#0ff;font-weight:bold">&#34;XRefs are {}&#34;</span>.format((xrefs)))
+    
+    <span style="color:#fff;font-weight:bold">for</span> xref in xrefs:
+        <span style="color:#fff;font-weight:bold">print</span>(<span style="color:#0ff;font-weight:bold">&#34;--&gt;Analyzing XRefs at {}&#34;</span>.format(<span style="color:#fff;font-weight:bold">hex</span>(xref.addr)))
+        <span style="color:#007f7f"># Get the Function object of the func containing the xref to memcpy</span>
+        memcpy_func_pred = bin_cfg.functions.get_by_addr(memcpy_func_pred_addr)
+
+        <span style="color:#007f7f"># Call to the bf function is the last instruction of the block.</span>
+        call_to_xref_address = project.factory.block(xref.addr).instruction_addrs[-<span style="color:#ff0;font-weight:bold">1</span>]
+        
+        <span style="color:#fff;font-weight:bold">try</span>:
+            rd = project.analyses.ReachingDefinitions(subject=memcpy_func_pred, 
+                                                      func_graph=memcpy_func_pred.graph,
+                                                      cc = memcpy_func_pred.calling_convention,
+                                                      observation_points= [(<span style="color:#0ff;font-weight:bold">&#34;insn&#34;</span>, call_to_xref_address , <span style="color:#ff0;font-weight:bold">0</span>)],
+                                                      dep_graph = dep_graph.DepGraph()
+                                                     )
+        <span style="color:#fff;font-weight:bold">except</span> Exception <span style="color:#fff;font-weight:bold">as</span> e:
+            <span style="color:#007f7f"># Sorry for this, sometimes it explodes :)</span>
+            <span style="color:#fff;font-weight:bold">continue</span>
+
+        rd_ddg_graph = rd.dep_graph
+        <span style="color:#007f7f"># Instantiate the object that will walk back the dep_graph.</span>
+        def_explorer = DefinitionExplorer(project, rd_ddg_graph)
+        
+        <span style="color:#007f7f"># Get the VEX offset for &#34;r0&#34;</span>
+        reg_vex_offset = project.arch.registers.get(<span style="color:#0ff;font-weight:bold">&#34;r0&#34;</span>, None)[<span style="color:#ff0;font-weight:bold">0</span>]
+        
+        <span style="color:#fff;font-weight:bold">if</span> rd.observed_results != {}:
+            <span style="color:#007f7f"># Cycle all over the results </span>
+            <span style="color:#fff;font-weight:bold">for</span> observed_result in rd.observed_results.items():
+                reg_defs = observed_result[<span style="color:#ff0;font-weight:bold">1</span>].register_definitions.get_objects_by_offset(reg_vex_offset)
+                <span style="color:#fff;font-weight:bold">for</span> reg_def in reg_defs:
+                    reg_seen_defs = def_explorer.resolve_use_def(reg_def)
+                    <span style="color:#fff;font-weight:bold">for</span> definition in reg_seen_defs:
+                        OVERALL_DEFS.add(definition)
+
+            <span style="color:#fff;font-weight:bold">for</span> definition in OVERALL_DEFS:
+                <span style="color:#fff;font-weight:bold">if</span> definition[<span style="color:#ff0;font-weight:bold">0</span>] == <span style="color:#0ff;font-weight:bold">&#34;retval&#34;</span>:
+                    <span style="color:#007f7f"># It&#39;s not always guaranteed that the retval tag of a definition has the</span>
+                    <span style="color:#007f7f"># func addr, in those casese we call it a day (definition[1] will be None).</span>
+                    <span style="color:#fff;font-weight:bold">if</span> definition[<span style="color:#ff0;font-weight:bold">1</span>] != None:
+                        FUNCS.add(definition[<span style="color:#ff0;font-weight:bold">1</span>])
+<span style="color:#fff;font-weight:bold">print</span>(FUNCS)
+</code></pre></div><p>And as a final result: in <code>FUNCS</code> we can see all the functions that are providing values to the <code>r0</code> argument of <code>memcpy</code>:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">{0x3a3d, 0x4f5d, 0x5281, 0x5585, 0x953d, 0x988d, 0xa41d}
+</code></pre></div><p>(the code above has been tested with <em>angr</em> 9, commit <code>dc801facba8a0b127e96825da9b09298fed2e5c0</code>. You can download the binary blob <a href="/bins/atmel_6lowpan_udp_rx.bin">here</a>)</p>
+<p>Hopefully, this blog-post gave enough information to start to hack into RD, feel free to ping us on our <a href="https://angr.io/invite/">slack</a> for any questions, we have a pretty active and excited community over there!</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "yourdiscussshortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2020
+         Fabio Gritti (degrigis) 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+        
+      
+    </section>
+  </footer>
+
+    </main>
+
+    
+      
+      <script src="/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>
