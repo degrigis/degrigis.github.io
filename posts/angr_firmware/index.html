@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+
+    <meta name="author" content="Fabio Gritti (degrigis)">
+    <meta name="description" content="Firmware &amp; angr A Custom Loader Security Thoughts  In the past few months, as part of my current research project, I have been playing a lot with angr and firmware analysis.
+In particular, I&rsquo;ve been playing with monolithic firmware images. More specifically, single fat binaries that blend together application and system code (usually a real time operating system &#43; libraries) and are generally flushed and executed in a custom way on physical dedicated devices.">
+    <meta name="keywords" content="blog,hacker,infosec">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Firmware analysis with angr"/>
+<meta name="twitter:description" content="Firmware &amp; angr A Custom Loader Security Thoughts  In the past few months, as part of my current research project, I have been playing a lot with angr and firmware analysis.
+In particular, I&rsquo;ve been playing with monolithic firmware images. More specifically, single fat binaries that blend together application and system code (usually a real time operating system &#43; libraries) and are generally flushed and executed in a custom way on physical dedicated devices."/>
+
+    <meta property="og:title" content="Firmware analysis with angr" />
+<meta property="og:description" content="Firmware &amp; angr A Custom Loader Security Thoughts  In the past few months, as part of my current research project, I have been playing a lot with angr and firmware analysis.
+In particular, I&rsquo;ve been playing with monolithic firmware images. More specifically, single fat binaries that blend together application and system code (usually a real time operating system &#43; libraries) and are generally flushed and executed in a custom way on physical dedicated devices." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.example.com/posts/angr_firmware/" />
+<meta property="article:published_time" content="2020-11-06T00:00:00+00:00" />
+<meta property="article:modified_time" content="2020-11-06T00:00:00+00:00" />
+
+
+    <title>
+  Firmware analysis with angr · POP RAX; POP RBX; RET
+</title>
+
+    
+      <link rel="canonical" href="http://www.example.com/posts/angr_firmware/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.1.7/css/fork-awesome.min.css" integrity="sha256-gsmEoJAws/Kd3CjuOQzLie5Q3yshhvmo7YNtBG7aaEY=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="/css/coder.min.36f1118d4548731545ceb52c453b4b6ae8feb6fbd2008eb355940c7c146e03ec.css" integrity="sha256-NvERjUVIcxVFzrUsRTtLauj&#43;tvvSAI6zVZQMfBRuA&#43;w=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+      
+        
+        
+        <link rel="stylesheet" href="/css/coder-dark.min.717236c74e0a5208ef73964a9f44c6b443b689a95b270d8b2a40d0c012460dac.css" integrity="sha256-cXI2x04KUgjvc5ZKn0TGtEO2ialbJw2LKkDQwBJGDaw=" crossorigin="anonymous" media="screen" />
+      
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+
+    
+      <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+    
+
+    <meta name="generator" content="Hugo 0.76.4" />
+  </head>
+
+  
+  
+    
+  
+  <body class="colorscheme-auto"
+        onload=" twemoji.parse(document.body); "
+  >
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      POP RAX; POP RBX; RET
+    </a>
+    
+      
+        <span id="dark-mode-toggle" class="float-right">
+          <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+        </span>
+      
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">About</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/publications/">Publications</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">Blog</a>
+            </li>
+          
+        
+        
+        
+          <li class="navigation-item separator">
+            <span>|</span>
+          </li>
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Firmware analysis with angr</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2020-11-06T00:00:00Z'>
+                November 6, 2020
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              2-minute read
+            </span>
+          </div>
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="/tags/angr/">angr</a>
+      <span class="separator">•</span>
+    <a href="/tags/binary-analysis/">binary analysis</a>
+      <span class="separator">•</span>
+    <a href="/tags/firmware-analysis/">firmware analysis</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <ul>
+<li><a href="#firmware--angr">Firmware &amp; angr</a></li>
+<li><a href="#a-custom-loader">A Custom Loader</a></li>
+<li><a href="#security-thoughts">Security Thoughts</a></li>
+</ul>
+<p>In the past few months, as part of my current research project, I have been playing a lot with <a href="https://github.com/angr/angr">angr</a> and firmware analysis.</p>
+<p>In particular, I&rsquo;ve been playing with <em>monolithic firmware images</em>.
+More specifically, single fat binaries that blend together application and system code (usually a real time operating system + libraries) and are generally flushed and executed in a custom way on physical dedicated devices.</p>
+<p>In this blogpost I want to discuss some of the current research challenges and motivations regarding this domain, and dump some thoughts I have been discussing during countless hours of brainstorming with my fellow hacker labmates.</p>
+<h1 id="firmware--angr">Firmware &amp; angr</h1>
+<p>Recently I have been asked: <em>&ldquo;Can I analyze firmware with angr?&quot;</em> 🤔<br>
+The answer is: <em>&ldquo;Absolutely, but you need to know what you are doing&rdquo;</em></p>
+<p>First of all, to understand why this is not as straightforward as when you create a standard <code>Project</code> starting from an ELF file, we need to do a step back.
+When you load an ELF file in angr we emulate what the real Linux loader is doing whenever you start a program.</p>
+<p>This is possible because they way the Linux loader loads and execute an ELF binary, and the format of the ELF file itself, are well known and standardized. In particular, we known where to map the binary (usually standardized in Linux systems), we know where is the entry point (the ELF file is telling us), and we know at priori, or thanks to the ELF header, for which architecture the binary has been made for.</p>
+<p>However, in monolithic firmware world we don&rsquo;t always have these information. In the worst case scenario the only thing we know is that some not well specified hardware device will run this obscure binary we have on our hands.</p>
+<p>In order to start to analyze a blob we need 3 critical information:</p>
+<ul>
+<li>For which system architecture the blob has been created (i.e., ARM? x86? MIPS?)</li>
+<li>Which is the base address of the blob (i.e., at which address the blob is loaded in RAM)</li>
+<li>Where is the entry point of the code?</li>
+</ul>
+<h1 id="a-custom-loader">A Custom Loader</h1>
+<h1 id="security-thoughts">Security Thoughts</h1>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+          2020 -
+        
+        2021
+         Fabio Gritti (degrigis) 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+        
+      
+    </section>
+  </footer>
+
+    </main>
+
+    
+      
+      <script src="/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>

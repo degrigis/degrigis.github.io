@@ -33,6 +33,16 @@
   </url>
   
   <url>
+    <loc>http://www.example.com/posts/explosion_detector/</loc>
+    <lastmod>2020-02-11T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.example.com/tags/dse/</loc>
+    <lastmod>2020-02-11T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>http://www.example.com/about/</loc>
   </url>
   

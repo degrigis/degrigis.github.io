@@ -1,21 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>angr on POP RAX; POP RBX; RET</title>
-    <link>http://www.example.com/tags/angr/</link>
-    <description>Recent content in angr on POP RAX; POP RBX; RET</description>
+    <title>dse on POP RAX; POP RBX; RET</title>
+    <link>http://www.example.com/tags/dse/</link>
+    <description>Recent content in dse on POP RAX; POP RBX; RET</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://www.example.com/tags/angr/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title> 🔬 A reaching definition engine for binary analysis built-in in angr.</title>
-      <link>http://www.example.com/posts/angr_rd/</link>
-      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
-      
-      <guid>http://www.example.com/posts/angr_rd/</guid>
-      <description>Background Example Final Code  Background In this blog-post I would like to talk about some recent effort we have done to improve the Reaching Definition (RD) analysis inside angr, and how you can use it in your projects. Straight from compiler theory, a reaching definition analysis is (in very simple terms) a static program analysis technique that can help us answer which are the possible definitions for a specific variable at a particular line of code.</description>
-    </item>
-    
+    <lastBuildDate>Tue, 11 Feb 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://www.example.com/tags/dse/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title> 🔬 Controlling angr dynamic symbolic execution resources consumption</title>
       <link>http://www.example.com/posts/explosion_detector/</link>
