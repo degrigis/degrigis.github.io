@@ -6,11 +6,11 @@
     <description>Recent content in dse on POP RAX; POP RBX; RET</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 11 Feb 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://www.example.com/tags/dse/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 11 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="http://www.example.com/tags/dse/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title> 🔬 Controlling angr dynamic symbolic execution resources consumption</title>
       <link>http://www.example.com/posts/explosion_detector/</link>
-      <pubDate>Tue, 11 Feb 2020 00:00:00 +0000</pubDate>
+      <pubDate>Thu, 11 Feb 2021 00:00:00 +0000</pubDate>
       
       <guid>http://www.example.com/posts/explosion_detector/</guid>
       <description>Intro MemLimiter ⚖️ ExplosionDetector 💥  Intro You all know, DSE can be explosive, and sometimes you need either to put a hard limit on resources consumption (in fact, you don&amp;rsquo;t want to risk losing your perfect windows placement by rebooting!), or you can&amp;rsquo;t afford to wait forever for symbolic execution because YOLO.

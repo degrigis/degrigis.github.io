@@ -6,7 +6,17 @@
     <description>Recent content in binary analysis on POP RAX; POP RBX; RET</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://www.example.com/tags/binary-analysis/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 11 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="http://www.example.com/tags/binary-analysis/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title> 🔬 Controlling angr dynamic symbolic execution resources consumption</title>
+      <link>http://www.example.com/posts/explosion_detector/</link>
+      <pubDate>Thu, 11 Feb 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.example.com/posts/explosion_detector/</guid>
+      <description>Intro MemLimiter ⚖️ ExplosionDetector 💥  Intro You all know, DSE can be explosive, and sometimes you need either to put a hard limit on resources consumption (in fact, you don&amp;rsquo;t want to risk losing your perfect windows placement by rebooting!), or you can&amp;rsquo;t afford to wait forever for symbolic execution because YOLO.
+On our angr slack channel, multiple users have asked how to set a Timeout to their symbolic exploration, so, I&amp;rsquo;ve thought was a good idea to share here some snippets that can be useful when playing around with angr.</description>
+    </item>
+    
     <item>
       <title> 🔬 A reaching definition engine for binary analysis built-in in angr.</title>
       <link>http://www.example.com/posts/angr_rd/</link>
@@ -14,16 +24,6 @@
       
       <guid>http://www.example.com/posts/angr_rd/</guid>
       <description>Background Example Final Code  Background In this blog-post I would like to talk about some recent effort we have done to improve the Reaching Definition (RD) analysis inside angr, and how you can use it in your projects. Straight from compiler theory, a reaching definition analysis is (in very simple terms) a static program analysis technique that can help us answer which are the possible definitions for a specific variable at a particular line of code.</description>
-    </item>
-    
-    <item>
-      <title> 🔬 Controlling angr dynamic symbolic execution resources consumption</title>
-      <link>http://www.example.com/posts/explosion_detector/</link>
-      <pubDate>Tue, 11 Feb 2020 00:00:00 +0000</pubDate>
-      
-      <guid>http://www.example.com/posts/explosion_detector/</guid>
-      <description>Intro MemLimiter ⚖️ ExplosionDetector 💥  Intro You all know, DSE can be explosive, and sometimes you need either to put a hard limit on resources consumption (in fact, you don&amp;rsquo;t want to risk losing your perfect windows placement by rebooting!), or you can&amp;rsquo;t afford to wait forever for symbolic execution because YOLO.
-On our angr slack channel, multiple users have asked how to set a Timeout to their symbolic exploration, so, I&amp;rsquo;ve thought was a good idea to share here some snippets that can be useful when playing around with angr.</description>
     </item>
     
   </channel>
